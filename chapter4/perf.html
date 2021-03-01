@@ -1,0 +1,82 @@
+<!doctype html><body><img id="imgTest" src="https://www.baidu.com/img/bd_logo1.png?where=super">
+  <img id="imgTest" src="https://www.baidu.com/img/bd_logo1.png?where=super">
+  <style type=text/css>
+    background-image:url('https://www.baidu.com/img/dong_8f1d47bcb77d74a1e029d8cbb3b33854.gif);
+  </style>
+  </body>
+  <html>
+<script type="text/javascript">
+(() => {
+  const imgs = []
+  const getImageDomSrc = {
+    _getImgSrcFromBgImg: function (bgImg) {
+      var imgSrc;
+      var matches = bgImg.match(/url\(.*?\)/g);
+      if (matches && matches.length) {
+        var urlStr = matches[matches.length - 1];
+        var innerUrl = urlStr.replace(/^url\([\'\"]?/, '').replace(/[\'\"]?\)$/, '');
+        if (((/^http/.test(innerUrl) || /^\/\//.test(innerUrl)))) {
+          imgSrc = innerUrl;
+        }
+      }
+      return imgSrc;
+    },
+    getImgSrcFromDom: function (dom, imgFilter) {
+      if (!(dom.getBoundingClientRect && dom.getBoundingClientRect().top < window.innerHeight))
+        return false;
+      imgFilter = [/(\.)(png|jpg|jpeg|gif|webp|ico|bmp|tiff|svg)/i]
+      var src;
+      if (dom.nodeName.toUpperCase() == 'IMG') {
+        src = dom.getAttribute('src');
+      } else {
+        var computedStyle = window.getComputedStyle(dom);
+        var bgImg = computedStyle.getPropertyValue('background-image') || computedStyle.getPropertyValue('background');
+        var tempSrc = this._getImgSrcFromBgImg(bgImg, imgFilter);
+        if (tempSrc && this._isImg(tempSrc, imgFilter)) {
+          src = tempSrc;
+        }
+      }
+      return src;
+    },
+
+    _isImg: function (src, imgFilter) {
+      for (var i = 0, len = imgFilter.length; i < len; i++) {
+        if (imgFilter[i].test(src)) {
+          return true;
+        }
+      }
+      return false;
+    },
+
+    traverse(e) {
+      var _this = this
+        , tName = e.tagName;
+      if ("SCRIPT" !== tName && "STYLE" !== tName && "META" !== tName && "HEAD" !== tName) {
+        var el = this.getImgSrcFromDom(e)
+        if (el && !imgs.includes(el))
+          imgs.push(el)
+        var len = e.children ? e.children.length : 0;
+        if (len > 0)
+          for (var child = e.children, _len = len - 1; _len >= 0; _len--)
+            _this.traverse(child[_len]);
+      }
+    }
+  }
+
+  getImageDomSrc.traverse(document.body);
+  window.onload=function(){
+  var max = Math.max(...imgs.map(element => {
+     if (/^(\/\/)/.test(element))
+      element = 'https:' + element;
+    try {
+      return performance.getEntriesByName(element)[0].responseEnd || 0
+    } catch (error) {
+      return 0
+    }
+  }
+  ))
+  console.log(max);
+  }
+}
+)()
+</script>
